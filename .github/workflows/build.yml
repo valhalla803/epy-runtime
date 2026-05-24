@@ -37,6 +37,7 @@ jobs:
         env:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
           CIBW_SKIP: "*-musllinux_*"
+          CIBW_BEFORE_ALL_LINUX: "yum install -y openssl-devel zlib-devel"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
