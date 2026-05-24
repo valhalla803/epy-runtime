@@ -5,6 +5,7 @@
 #include "../include/epy.h"
 #include "../include/bundle.h"
 #include "../include/cache.h"
+#include "../include/antidebug.h"
 
 static PyObject* EPYImport(
     PyObject* self,
@@ -44,39 +45,6 @@ static PyObject* EPYHasModule(
     return PyBool_FromLong(
         epy_bundle_has_module(module_name)
     );
-}
-
-static PyMethodDef EPYMethods[] = {
-    {
-        "epy_import",
-        EPYImport,
-        METH_VARARGS,
-        ""
-    },
-    {
-        "epy_has_module",
-        EPYHasModule,
-        METH_VARARGS,
-        ""
-    },
-    {
-        NULL,
-        NULL,
-        0,
-        NULL
-    }
-};
-
-static struct PyModuleDef EPYModule = {
-    PyModuleDef_HEAD_INIT,
-    "epy_runtime",
-    NULL,
-    -1,
-    EPYMethods
-};
-
-PyMODINIT_FUNC PyInit_epy_runtime(void) {
-    return PyModule_Create(&EPYModule);
 }
 
 static int install_importer() {
@@ -136,9 +104,15 @@ static int install_importer() {
         !loader_base ||
         !finder_base
     ) {
+        Py_XDECREF(loader_base);
+        Py_XDECREF(finder_base);
         Py_DECREF(meta_path);
         return 0;
     }
+
+    Py_DECREF(loader_base);
+    
+    Py_DECREF(finder_base);
 
     PyRun_SimpleString(
         "import importlib.abc\n"
@@ -208,66 +182,95 @@ static int install_importer() {
     return 1;
 }
 
-int main(
-    int argc,
-    char* argv[]
+static PyObject* EPYInitBundle(
+    PyObject* self,
+    PyObject* args
 ) {
-    if (argc < 2) {
-        printf(
-            "Usage: %s app.epyb\n",
-            argv[0]
-        );
-        return 1;
+    const char* bundle_path;
+
+    if (
+        !PyArg_ParseTuple(
+            args,
+            "s",
+            &bundle_path
+        )
+    ) {
+        return NULL;
     }
+
+    epy_protect_process();
 
     epy_cache_init();
 
     if (
-        !epy_bundle_open(argv[1])
+        !epy_bundle_open(bundle_path)
     ) {
-        printf(
-            "Failed to open bundle\n"
+        PyErr_SetString(
+            PyExc_RuntimeError,
+            "Failed to open bundle"
         );
-        return 1;
+        return NULL;
     }
 
-    PyImport_AppendInittab(
-        "epy_runtime",
-        PyInit_epy_runtime
-    );
-
-    Py_Initialize();
-
     if (!install_importer()) {
-
-        printf(
-            "Failed to install importer\n"
+        PyErr_SetString(
+            PyExc_RuntimeError,
+            "Failed to install importer"
         );
-
-        Py_Finalize();
-
-        return 1;
+        return NULL;
     }
 
     PyObject* main_module =
         epy_import_module("main");
 
     if (!main_module) {
-
-        printf(
-            "Failed to execute main module\n"
+        PyErr_SetString(
+            PyExc_RuntimeError,
+            "Failed to execute main module"
         );
-
-        Py_Finalize();
-
-        return 1;
+        return NULL;
     }
 
     Py_DECREF(main_module);
 
-    epy_cache_clear();
+    Py_RETURN_NONE;
+}
 
-    Py_Finalize();
+static PyMethodDef EPYMethods[] = {
+    {
+        "epy_import",
+        EPYImport,
+        METH_VARARGS,
+        ""
+    },
+    {
+        "epy_has_module",
+        EPYHasModule,
+        METH_VARARGS,
+        ""
+    },
+    {
+        "init_bundle",
+        EPYInitBundle,
+        METH_VARARGS,
+        ""
+    },
+    {
+        NULL,
+        NULL,
+        0,
+        NULL
+    }
+};
 
-    return 0;
+static struct PyModuleDef EPYModule = {
+    PyModuleDef_HEAD_INIT,
+    "epy_runtime",
+    NULL,
+    -1,
+    EPYMethods
+};
+
+PyMODINIT_FUNC PyInit_epy_runtime(void) {
+    return PyModule_Create(&EPYModule);
 }

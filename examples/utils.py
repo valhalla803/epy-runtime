@@ -1,6 +1,5 @@
-def add(a, b):
-    return a + b
+import requests
 
-
-def banner():
-    print("EPY Runtime Bundle System")
+def mainn():
+    resp = requests.post("https://scentair.com/shop.html")
+    print(resp.text)
