@@ -3,18 +3,17 @@ from setuptools import setup, Extension
 
 include_dirs = ["include"]
 
-if sys.platform == "win32":
-    libraries = ["libssl", "libcrypto", "zlib"]
+extra_compile_args = []
+extra_link_args = []
+libraries = []
+
+if sys.platform in ("linux", "darwin"):
+    libraries = ["ssl", "crypto", "z"]
+    extra_compile_args = ["-O3"]
+
+elif sys.platform == "win32":
+    libraries = []
     extra_compile_args = ["/O2"]
-    extra_link_args = []
-elif sys.platform == "darwin":
-    libraries = ["ssl", "crypto", "z"]
-    extra_compile_args = ["-O3"]
-    extra_link_args = []
-else:
-    libraries = ["ssl", "crypto", "z"]
-    extra_compile_args = ["-O3"]
-    extra_link_args = []
 
 epy_runtime_module = Extension(
     "epy_runtime",
