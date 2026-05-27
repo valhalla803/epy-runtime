@@ -2,7 +2,6 @@ import sys
 from setuptools import setup, Extension
 
 include_dirs = ["include"]
-
 extra_compile_args = []
 extra_link_args = []
 libraries = []
@@ -14,6 +13,16 @@ if sys.platform in ("linux", "darwin"):
 elif sys.platform == "win32":
     libraries = ["libssl", "libcrypto", "zlib"]
     extra_compile_args = ["/O2"]
+
+if sys.platform == "darwin":
+    include_dirs.extend([
+        "/opt/homebrew/opt/openssl@3/include",
+        "/usr/local/opt/openssl@3/include"
+    ])
+    extra_link_args.extend([
+        "-L/opt/homebrew/opt/openssl@3/lib",
+        "-L/usr/local/opt/openssl@3/lib"
+    ])
 
 epy_runtime_module = Extension(
     "epy_runtime",
