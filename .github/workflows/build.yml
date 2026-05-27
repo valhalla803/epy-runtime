@@ -29,8 +29,7 @@ jobs:
 
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
-        run: |
-          brew install openssl zlib
+        run: brew install openssl zlib
 
       - name: Install cibuildwheel
         run: |
@@ -38,8 +37,7 @@ jobs:
           python -m pip install cibuildwheel==2.19.1
 
       - name: Build wheels
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
+        run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
 
@@ -55,14 +53,9 @@ jobs:
 
           CIBW_BEFORE_ALL_WINDOWS: "vcpkg install openssl:x64-windows zlib:x64-windows"
 
-          CIBW_ENVIRONMENT_WINDOWS: >
-            INCLUDE=C:\\vcpkg\\installed\\x64-windows\\include;
-            LIB=C:\\vcpkg\\installed\\x64-windows\\lib;
+          CIBW_ENVIRONMENT_WINDOWS: 'INCLUDE=C:\\vcpkg\\installed\\x64-windows\\include LIB=C:\\vcpkg\\installed\\x64-windows\\lib'
 
-          CIBW_ENVIRONMENT_MACOS: >
-            MACOSX_DEPLOYMENT_TARGET=15.0
-            CFLAGS='-I/opt/homebrew/opt/openssl/include -I/opt/homebrew/opt/zlib/include'
-            LDFLAGS='-L/opt/homebrew/opt/openssl/lib -L/opt/homebrew/opt/zlib/lib'
+          CIBW_ENVIRONMENT_MACOS: 'MACOSX_DEPLOYMENT_TARGET=15.0 CFLAGS="-I/opt/homebrew/opt/openssl/include -I/opt/homebrew/opt/zlib/include" LDFLAGS="-L/opt/homebrew/opt/openssl/lib -L/opt/homebrew/opt/zlib/lib"'
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
