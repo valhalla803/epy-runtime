@@ -43,10 +43,7 @@ jobs:
         env:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
 
-          CIBW_SKIP: >
-            *-musllinux_*
-            *-win32
-            *-i686
+          CIBW_SKIP: "*-musllinux_* *-win32 *-i686"
 
           CIBW_ARCHS_LINUX: "x86_64"
           CIBW_ARCHS_WINDOWS: "AMD64"
@@ -54,26 +51,18 @@ jobs:
 
           CIBW_MANYLINUX_X86_64_IMAGE: "quay.io/pypa/manylinux_2_34_x86_64"
 
-          CIBW_BEFORE_ALL_LINUX: >
-            dnf install -y openssl-devel zlib-devel
+          CIBW_BEFORE_ALL_LINUX: "dnf install -y openssl-devel zlib-devel"
 
-          CIBW_BEFORE_ALL_WINDOWS: >
-            vcpkg install openssl:x64-windows zlib:x64-windows;
-            if (Test-Path C:\vcpkg\installed\x64-windows\lib\zlib1.lib) {
-              Copy-Item
-              C:\vcpkg\installed\x64-windows\lib\zlib1.lib
-              C:\vcpkg\installed\x64-windows\lib\zlib.lib
-              -Force
-            }
+          CIBW_BEFORE_ALL_WINDOWS: "vcpkg install openssl:x64-windows zlib:x64-windows"
 
           CIBW_ENVIRONMENT_WINDOWS: >
-            INCLUDE="C:\\vcpkg\\installed\\x64-windows\\include;$INCLUDE"
-            LIB="C:\\vcpkg\\installed\\x64-windows\\lib;$LIB"
+            INCLUDE=C:\\vcpkg\\installed\\x64-windows\\include;
+            LIB=C:\\vcpkg\\installed\\x64-windows\\lib;
 
           CIBW_ENVIRONMENT_MACOS: >
-            MACOSX_DEPLOYMENT_TARGET="15.0"
-            CFLAGS="-I/opt/homebrew/opt/openssl/include -I/opt/homebrew/opt/zlib/include"
-            LDFLAGS="-L/opt/homebrew/opt/openssl/lib -L/opt/homebrew/opt/zlib/lib"
+            MACOSX_DEPLOYMENT_TARGET=15.0
+            CFLAGS='-I/opt/homebrew/opt/openssl/include -I/opt/homebrew/opt/zlib/include'
+            LDFLAGS='-L/opt/homebrew/opt/openssl/lib -L/opt/homebrew/opt/zlib/lib'
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
