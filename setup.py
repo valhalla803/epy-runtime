@@ -12,7 +12,7 @@ if sys.platform in ("linux", "darwin"):
     extra_compile_args = ["-O3"]
 
 elif sys.platform == "win32":
-    libraries = []
+    libraries = ["libssl", "libcrypto", "zlib"]
     extra_compile_args = ["/O2"]
 
 epy_runtime_module = Extension(
