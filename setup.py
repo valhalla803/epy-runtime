@@ -1,4 +1,5 @@
 import sys
+import os
 from setuptools import setup, Extension
 
 include_dirs = ["include"]
@@ -20,12 +21,19 @@ if sys.platform in ("linux", "darwin"):
             "/opt/homebrew/opt/openssl@3/lib",
             "/usr/local/opt/openssl@3/lib"
         ])
+        extra_link_args.extend([
+            "-Wl,-rpath,/opt/homebrew/opt/openssl@3/lib",
+            "-Wl,-rpath,/usr/local/opt/openssl@3/lib"
+        ])
 
 elif sys.platform == "win32":
     libraries = ["libssl", "libcrypto", "zlib"]
     extra_compile_args = ["/O2"]
-    include_dirs.append(r"C:\vcpkg\installed\x64-windows\include")
-    library_dirs.append(r"C:\vcpkg\installed\x64-windows\lib")
+    
+    vcpkg_root = os.environ.get("VCPKG_INSTALLATION_ROOT", "C:\\vcpkg")
+    
+    include_dirs.append(os.path.join(vcpkg_root, "installed", "x64-windows", "include"))
+    library_dirs.append(os.path.join(vcpkg_root, "installed", "x64-windows", "lib"))
 
 epy_runtime_module = Extension(
     "epy_runtime",
