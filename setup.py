@@ -2,6 +2,7 @@ import sys
 from setuptools import setup, Extension
 
 include_dirs = ["include"]
+library_dirs = []
 extra_compile_args = []
 extra_link_args = []
 libraries = []
@@ -10,19 +11,21 @@ if sys.platform in ("linux", "darwin"):
     libraries = ["ssl", "crypto", "z"]
     extra_compile_args = ["-O3"]
 
+    if sys.platform == "darwin":
+        include_dirs.extend([
+            "/opt/homebrew/opt/openssl@3/include",
+            "/usr/local/opt/openssl@3/include"
+        ])
+        library_dirs.extend([
+            "/opt/homebrew/opt/openssl@3/lib",
+            "/usr/local/opt/openssl@3/lib"
+        ])
+
 elif sys.platform == "win32":
     libraries = ["libssl", "libcrypto", "zlib"]
     extra_compile_args = ["/O2"]
-
-if sys.platform == "darwin":
-    include_dirs.extend([
-        "/opt/homebrew/opt/openssl@3/include",
-        "/usr/local/opt/openssl@3/include"
-    ])
-    extra_link_args.extend([
-        "-L/opt/homebrew/opt/openssl@3/lib",
-        "-L/usr/local/opt/openssl@3/lib"
-    ])
+    include_dirs.append(r"C:\vcpkg\installed\x64-windows\include")
+    library_dirs.append(r"C:\vcpkg\installed\x64-windows\lib")
 
 epy_runtime_module = Extension(
     "epy_runtime",
@@ -37,6 +40,7 @@ epy_runtime_module = Extension(
         "runtime/secure.c",
     ],
     include_dirs=include_dirs,
+    library_dirs=library_dirs,
     libraries=libraries,
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
