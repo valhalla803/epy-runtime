@@ -1,15 +1,24 @@
 import sys
 from setuptools import setup, Extension
 
+include_dirs = ["include"]
+
+extra_compile_args = []
+extra_link_args = []
+
+libraries = []
+
 if sys.platform == "win32":
-    libs = ["libssl", "libcrypto", "zlib1"]
-    extra_compile_args = ["/O2"]
+    libraries = ["crypt32"]
+elif sys.platform == "darwin":
+    libraries = ["ssl", "crypto", "z"]
+    extra_compile_args = ["-O3"]
 else:
-    libs = ["ssl", "crypto", "z"]
+    libraries = ["ssl", "crypto", "z"]
     extra_compile_args = ["-O3"]
 
 epy_runtime_module = Extension(
-    name="epy_runtime",
+    "epy_runtime",
     sources=[
         "runtime/antidebug.c",
         "runtime/bundle.c",
@@ -20,21 +29,17 @@ epy_runtime_module = Extension(
         "runtime/main.c",
         "runtime/secure.c",
     ],
-    include_dirs=["include"],
-    libraries=libs,
+    include_dirs=include_dirs,
+    libraries=libraries,
     extra_compile_args=extra_compile_args,
+    extra_link_args=extra_link_args,
 )
 
 setup(
     name="epy_runtime",
     version="1.0.0",
-    description="Encrypted Python Runtime",
+    description="Stable Python Runtime Extension",
     ext_modules=[epy_runtime_module],
     py_modules=["builder"],
     package_dir={"": "python"},
-    entry_points={
-        "console_scripts": [
-            "epy-build=builder:main",
-        ],
-    },
 )

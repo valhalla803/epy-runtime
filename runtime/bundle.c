@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <openssl/evp.h>
+#include <openssl/err.h>
 
 static FILE* bundle_fp = NULL;
 

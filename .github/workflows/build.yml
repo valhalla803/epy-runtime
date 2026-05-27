@@ -28,29 +28,15 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
-          CIBW_SKIP: "pp* *musllinux* *i686 *win32"
-
+          CIBW_SKIP: "*musllinux* *win32 *i686"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34
-
-          CIBW_BEFORE_ALL_LINUX: >
-            yum install -y openssl-devel zlib-devel
-
-          CIBW_BEFORE_ALL_WINDOWS: >
-            vcpkg install openssl:x64-windows zlib:x64-windows
-
-          CIBW_ENVIRONMENT_WINDOWS: >
-            INCLUDE=C:\\vcpkg\\installed\\x64-windows\\include;
-            LIB=C:\\vcpkg\\installed\\x64-windows\\lib
-
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
-          CIBW_ENVIRONMENT_MACOS: >
-            MACOSX_DEPLOYMENT_TARGET=13.0
-
-          CIBW_BUILD_VERBOSITY: 2
+          CIBW_ARCHS_MACOS: "arm64 x86_64"
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=13.0"
+          CIBW_BUILD_VERBOSITY: 1
           CIBW_DEBUG_TRACEBACK: 1
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels
           path: wheelhouse/*.whl
