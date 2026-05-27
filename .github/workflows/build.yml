@@ -1,22 +1,17 @@
-name: Build Wheels for All Systems
+name: Build Wheels
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+  build:
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -24,47 +19,24 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==2.19.1
-
-      - name: Install Linux dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl-dev zlib1g-dev
-
-      - name: Install macOS dependencies
-        if: runner.os == 'macOS'
-        run: |
-          brew install openssl zlib
-
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
-          CIBW_SKIP: "*-musllinux_* *-win32 *-i686"
+          CIBW_SKIP: "*cp38* *musllinux_* *win32 *i686"
+          CIBW_BUILD_VERBOSITY: "2"
+          CIBW_DEBUG_TRACEBACK: "1"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34
+          CIBW_ENVIRONMENT_WINDOWS: "INCLUDE=C:\\vcpkg\\installed\\x64-windows\\include LIB=C:\\vcpkg\\installed\\x64-windows\\lib"
 
-          # Linux
-          CIBW_BEFORE_ALL_LINUX: ""
-          CIBW_ENVIRONMENT_LINUX: >
-            CFLAGS="-O3"
+          CIBW_BEFORE_ALL_WINDOWS: "vcpkg install openssl:x64-windows zlib:x64-windows"
+          CIBW_ARCHS_MACOS: "arm64 x86_64"
 
-          # macOS
-          CIBW_ENVIRONMENT_MACOS: >
-            MACOSX_DEPLOYMENT_TARGET=13.0
-            CFLAGS="-I/opt/homebrew/opt/openssl/include -I/usr/local/opt/openssl/include"
-            LDFLAGS="-L/opt/homebrew/opt/openssl/lib -L/usr/local/opt/openssl/lib"
-
-          # Windows
-          CIBW_BEFORE_ALL_WINDOWS: >
-            vcpkg install openssl:x64-windows zlib:x64-windows
-
-          CIBW_ENVIRONMENT_WINDOWS: >
-            INCLUDE=C:\vcpkg\installed\x64-windows\include
-            LIB=C:\vcpkg\installed\x64-windows\lib
-
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=13.0"
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
