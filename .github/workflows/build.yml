@@ -5,13 +5,8 @@ on:
     branches: [main]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+  build-linux:
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -20,29 +15,22 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.19.1
-      - name: Linux deps
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libssl-dev zlib1g-dev
-      - name: macOS deps
-        if: runner.os == 'macOS'
-        run: brew install openssl zlib
-      - name: Windows deps
-        if: runner.os == 'Windows'
+      - name: Install dependencies
         run: |
-          choco install openssl.light -y || true
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev zlib1g-dev python3-dev
 
-      - name: Build wheels
+      - name: Install cibuildwheel
+        run: pip install cibuildwheel==2.19.1
+
+      - name: Build wheel
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
-          CIBW_SKIP: "*musllinux* *i686 *win32"
-          CIBW_BUILD_VERBOSITY: 1
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_BUILD: "cp311-*"
+          CIBW_SKIP: "*"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels
           path: wheelhouse/*.whl
